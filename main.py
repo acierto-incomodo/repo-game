@@ -12,7 +12,7 @@ from PySide6 import QtCore, QtWidgets, QtGui
 
 # ---------------- CONFIG ------------------
 
-LAUNCHER_VERSION = "1.0.0"
+LAUNCHER_VERSION = "1.0.1"
 
 # Windows build is split into two parts
 BUILD_URL_WIN_PART1 = "https://github.com/acierto-incomodo/repo-game/releases/latest/download/Build.zip"
@@ -20,8 +20,8 @@ BUILD_URL_LINUX = "https://github.com/acierto-incomodo/repo-game/releases/latest
 VERSION_URL = "https://github.com/acierto-incomodo/repo-game/releases/latest/download/version.txt"
 RELEASE_NOTES_URL = "https://github.com/acierto-incomodo/repo-game/releases/latest/download/ReleaseNotes.txt"
 
-EXE_NAME_WIN   = "Build/R.E.P.O..exe"
-EXE_NAME_LINUX = "Build/R.E.P.O..exe"
+EXE_NAME_WIN   = "Build/REPO.exe"
+EXE_NAME_LINUX = "Build/REPO.exe"
 
 DOWNLOAD_DIR = Path.cwd() / "downloads"
 GAME_DIR     = Path.cwd() / "game"

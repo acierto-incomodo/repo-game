@@ -1,40 +1,110 @@
 [Setup]
 AppName=R.E.P.O. by StormGamesStudios
-AppVersion=1.0.4
-DefaultDirName={userappdata}\StormGamesStudios\Programs\R.E.P.O.
+AppVersion=1.0.5
+DefaultDirName={userappdata}\StormGamesStudios\NewGameDir\REPO
 DefaultGroupName=StormGamesStudios
-OutputDir=C:\Users\melio\Documents\GitHub\repo\output
-OutputBaseFilename=R.E.P.O._Launcher_Installer
+OutputDir=C:\Users\melio\Documents\GitHub\repo-game\output
+OutputBaseFilename=REPO_Launcher_Installer
 Compression=lzma
 SolidCompression=yes
 AppCopyright=Copyright © 2025 StormGamesStudios. All rights reserved.
 VersionInfoCompany=StormGamesStudios
 AppPublisher=StormGamesStudios
 SetupIconFile=repo.ico
-VersionInfoVersion=1.0.4.0
+VersionInfoVersion=1.0.5.0
 DisableProgramGroupPage=yes
 ; Habilitar selección de carpeta
-DisableDirPage=no
+DisableDirPage=yes
 
 [Files]
-Source: "C:\Users\melio\Documents\GitHub\repo\dist\installer_updater.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\melio\Documents\GitHub\repo\repo.ico"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\melio\Documents\GitHub\repo\repo.png"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\melio\Documents\GitHub\repo-game\dist\installer_updater.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\melio\Documents\GitHub\repo-game\repo.ico"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\melio\Documents\GitHub\repo-game\repo.png"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
-Name: "{commonprograms}\StormGamesStudios\R.E.P.O."; Filename: "{app}\installer_updater.exe"; IconFilename: "{app}\repo.ico"; Comment: "Lanzador de R.E.P.O."; WorkingDir: "{app}"
-Name: "{commonprograms}\StormGamesStudios\Desinstalar R.E.P.O."; Filename: "{uninstallexe}"; IconFilename: "{app}\repo.ico"; Comment: "Desinstalar R.E.P.O."
+Name: "{commonprograms}\StormGamesStudios\REPO"; Filename: "{app}\installer_updater.exe"; IconFilename: "{app}\repo.ico"; Comment: "Lanzador de R.E.P.O."; WorkingDir: "{app}"
+Name: "{commonprograms}\StormGamesStudios\Desinstalar REPO"; Filename: "{uninstallexe}"; IconFilename: "{app}\repo.ico"; Comment: "Desinstalar R.E.P.O."
 
 [Registry]
-Root: HKCU; Subkey: "Software\R.E.P.O."; ValueType: string; ValueName: "Install_Dir"; ValueData: "{app}"
+Root: HKCU; Subkey: "Software\REPO"; ValueType: string; ValueName: "Install_Dir"; ValueData: "{app}"
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}"
 
 [Run]
-Filename: "{app}\installer_updater.exe"; Description: "Ejecutar R.E.P.O."; Flags: nowait postinstall skipifsilent
+Filename: "{app}\installer_updater.exe"; Description: "Ejecutar REPO"; Flags: nowait postinstall skipifsilent
 
 [Code]
+function IsDirectoryEmpty(DirPath: String): Boolean;
+var
+  FindRec: TFindRec;
+begin
+  Result := True;
+  if DirExists(DirPath) then
+  begin
+    if FindFirst(DirPath + '\*', FindRec) then
+    begin
+      try
+        repeat
+          if (FindRec.Name <> '.') and (FindRec.Name <> '..') then
+          begin
+            Result := False;
+            Break;
+          end;
+        until not FindNext(FindRec);
+      finally
+        FindClose(FindRec);
+      end;
+    end;
+  end;
+end;
+
+procedure RunUninstaller(DirPath: String);
+var
+  FindRec: TFindRec;
+  ResultCode: Integer;
+  Attempts: Integer;
+begin
+  if DirExists(DirPath) then
+  begin
+    // Busca cualquier archivo que coincida con unins*.exe (unins000.exe, unins001.exe, etc.)
+    if FindFirst(DirPath + '\unins*.exe', FindRec) then
+    begin
+      try
+        repeat
+          // Ejecutar el desinstalador de forma muy silenciosa y esperar a que termine
+          Exec(DirPath + '\' + FindRec.Name, '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+        until not FindNext(FindRec);
+      finally
+        FindClose(FindRec);
+      end;
+    end;
+
+    // Esperar hasta que la carpeta esté vacía (máximo 5 segundos de espera activa)
+    Attempts := 0;
+    while (not IsDirectoryEmpty(DirPath)) and (Attempts < 10) do
+    begin
+      Sleep(500); // Esperar 500ms antes de volver a comprobar
+      Attempts := Attempts + 1;
+      
+      // Intentar borrar lo que quede (por si son archivos de log o restos que el desinstalador no quitó)
+      if Attempts > 5 then
+      begin
+        DelTree(DirPath, True, True, True);
+      end;
+    end;
+  end;
+end;
+
+procedure UninstallOldVersion();
+begin
+  // 1. Revisar la ruta de la versión anterior específica
+  RunUninstaller(ExpandConstant('{userappdata}\StormGamesStudios\NewGameDir\REPO_Launcher'));
+  
+  // 2. Revisar la ruta donde se va a instalar actualmente (por si es una reinstalación/actualización)
+  RunUninstaller(ExpandConstant('{app}'));
+end;
+
 procedure CloseApp();
 var
   ResultCode: Integer;
@@ -42,7 +112,8 @@ begin
   // Cierra el actualizador y el launcher si están abiertos
   Exec('taskkill', '/F /IM installer_updater.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
   Exec('taskkill', '/F /IM win_launcher.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
-  Exec('taskkill', '/F /IM "repo"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  Exec('taskkill', '/F /IM "REPO.exe"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  Exec('taskkill', '/F /IM "R.E.P.O. Launcher.exe"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
 end;
 
 procedure CurStepChanged(CurStep: TSetupStep);
@@ -51,6 +122,7 @@ begin
   if CurStep = ssInstall then
   begin
     CloseApp();
+    UninstallOldVersion();
   end;
 end;
 

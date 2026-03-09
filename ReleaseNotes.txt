@@ -3,5 +3,5 @@ Cambios
 Launcher (v1.0.0):
 - NaN
 
-Juego (v1.0.0):
+Juego (v1.3.2):
 - NaN

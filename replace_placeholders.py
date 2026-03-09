@@ -5,9 +5,9 @@ import sys
 # ================= CONFIGURACIÓN =================
 # Define aquí los valores reales por los que quieres reemplazar los marcadores.
 REPLACEMENTS = {
-    "{NAME}": "R.E.P.O.",       # Nombre visible del juego
+    "{NAME}": "REPO",       # Nombre visible del juego
     "{ID}": "repo",         # ID usado en rutas/carpetas (sin espacios)
-    "{REMOVE}": "repo",  # Nombre del ejecutable/proceso a cerrar
+    "{REMOVE}": "REPO",  # Nombre del ejecutable/proceso a cerrar
     "{GITHUB}": "repo-game"
 }
 
