@@ -18,17 +18,17 @@ DisableDirPage=yes
 UsePreviousAppDir=no
 
 [Files]
-Source: "C:\Users\melio\Documents\GitHub\repo-game\dist\Launcher_Portable.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\melio\Documents\GitHub\repo-game\dist\installer_updater.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\melio\Documents\GitHub\repo-game\repo.ico"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\melio\Documents\GitHub\repo-game\repo.png"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\melio\Documents\GitHub\repo-game\dist\uninstaller-old.exe"; DestDir: "{tmp}"; Flags: dontcopy
 
 [Icons]
-Name: "{commonprograms}\StormGamesStudios\R.E.P.O. Launcher"; Filename: "{app}\Launcher_Portable.exe"; IconFilename: "{app}\repo.ico"; Comment: "Lanzador de R.E.P.O. Launcher"; WorkingDir: "{app}"
+Name: "{commonprograms}\StormGamesStudios\R.E.P.O. Launcher"; Filename: "{app}\installer_updater.exe"; IconFilename: "{app}\repo.ico"; Comment: "Lanzador de R.E.P.O. Launcher"; WorkingDir: "{app}"
 Name: "{commonprograms}\StormGamesStudios\Desinstalar R.E.P.O. Launcher"; Filename: "{uninstallexe}"; IconFilename: "{app}\repo.ico"; Comment: "Desinstalar R.E.P.O. Launcher"
 
 ; Acceso directo en el menú de inicio dentro de la carpeta StormLauncher_HMCL-Edition
-Name: "{commonprograms}\StormGamesStudios\R.E.P.O. Launcher"; Filename: "{app}\Launcher_Portable.exe"; IconFilename: "{app}\repo.ico"
+Name: "{commonprograms}\StormGamesStudios\R.E.P.O. Launcher"; Filename: "{app}\installer_updater.exe"; IconFilename: "{app}\repo.ico"
 Name: "{commonprograms}\StormGamesStudios\Desinstalar R.E.P.O. Launcher"; Filename: "{uninstallexe}"; IconFilename: "{app}\repo.ico"
 
 [Registry]
@@ -38,7 +38,7 @@ Root: HKCU; Subkey: "Software\R.E.P.O. Launcher"; ValueType: string; ValueName: 
 Type: filesandordirs; Name: "{app}"
 
 [Run]
-Filename: "{app}\Launcher_Portable.exe"; Description: "Ejecutar R.E.P.O. Launcher"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\installer_updater.exe"; Description: "Ejecutar R.E.P.O. Launcher"; Flags: nowait postinstall skipifsilent
 
 [Code]
 function IsDirectoryEmpty(DirPath: String): Boolean;
