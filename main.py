@@ -19,8 +19,8 @@ BUILD_URL_LINUX = "https://github.com/acierto-incomodo/repo-game/releases/latest
 VERSION_URL = "https://github.com/acierto-incomodo/repo-game/releases/latest/download/Version.txt"
 RELEASE_NOTES_URL = "https://github.com/acierto-incomodo/repo-game/releases/latest/download/ReleaseNotes.txt"
 
-EXE_NAME_WIN   = "Build/Fusion Arena.exe"
-EXE_NAME_LINUX = "Fusion Arena Linux.x86_64"
+EXE_NAME_WIN   = "Build/REPO.exe"
+EXE_NAME_LINUX = "REPO Linux.x86_64"
 
 DOWNLOAD_DIR = Path.cwd() / "downloads"
 GAME_DIR     = Path.cwd() / "game"
@@ -83,10 +83,11 @@ class LauncherWindow(QtWidgets.QWidget):
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Fusion Arena Launcher")
+        self.setWindowTitle("R.E.P.O. Launcher")
         self.setMinimumSize(520, 420)
         self.setMaximumSize(520, 420)
         self.setWindowIcon(QtGui.QIcon.fromTheme("applications-games"))
+        self.setWindowFlag(QtCore.Qt.WindowMaximizeButtonHint, False)
 
         self.setup_ui()
         self.refresh_version_display()
@@ -94,16 +95,10 @@ class LauncherWindow(QtWidgets.QWidget):
 
         self.on_check()
 
-        # Temporizador para actualizar el estado de MS Store automáticamente
-        if sys.platform.startswith("win"):
-            self.store_refresh_timer = QtCore.QTimer(self)
-            self.store_refresh_timer.timeout.connect(self.update_ms_store_button)
-            self.store_refresh_timer.start(3000)  # Comprueba cada 3 segundos
-
     def setup_ui(self):
         layout = QtWidgets.QVBoxLayout(self)
 
-        title = QtWidgets.QLabel("Fusion Arena")
+        title = QtWidgets.QLabel("R.E.P.O.")
         title.setAlignment(QtCore.Qt.AlignCenter)
         title.setStyleSheet("font-size:22px; font-weight:bold;")
         layout.addWidget(title)
@@ -184,12 +179,8 @@ class LauncherWindow(QtWidgets.QWidget):
         # nuevas señales
         self.btn_open_folder.clicked.connect(self.open_location)
         self.btn_delete_data.clicked.connect(self.delete_data)
-        self.btn_ms_store.clicked.connect(self.on_ms_store_clicked)
 
-        if sys.platform.startswith("win"):
-            self.update_ms_store_button()
-        else:
-            self.btn_ms_store.setVisible(False)
+        self.btn_ms_store.setVisible(False)
 
         self.btn_update.setEnabled(False)
 
@@ -233,36 +224,6 @@ class LauncherWindow(QtWidgets.QWidget):
         except Exception as e:
             self.set_status(f"Error: {e}")
 
-    # ------------ NUEVAS FUNCIONES: MICROSOFT STORE ------------
-
-    def is_ms_store_installed(self):
-        if not sys.platform.startswith("win"):
-            return False
-        try:
-            # Comprobamos si el paquete está instalado usando PowerShell
-            # Usamos el nombre del paquete (StormGamesStudios.FusionArena) en lugar del PFN
-            process = subprocess.run(
-                ["powershell", "-Command", "Get-AppxPackage StormGamesStudios.FusionArena"],
-                capture_output=True,
-                text=True,
-                creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
-            )
-            return bool(process.stdout.strip())
-        except:
-            return False
-
-    def update_ms_store_button(self):
-        if self.is_ms_store_installed():
-            self.btn_ms_store.setText("Abrir con Microsoft Store")
-        else:
-            self.btn_ms_store.setText("Instalar de Microsoft Store")
-
-    def on_ms_store_clicked(self):
-        if self.is_ms_store_installed():
-            subprocess.Popen(["explorer.exe", "shell:AppsFolder\\StormGamesStudios.FusionArena_8m3s815sae1r4!App"])
-        else:
-            QtGui.QDesktopServices.openUrl(QtCore.QUrl("ms-windows-store://pdp/?productid=9PG96R122SPV"))
-
     # ------------ CHECK ----------
 
     def on_check(self):
@@ -294,9 +255,6 @@ class LauncherWindow(QtWidgets.QWidget):
     def on_check_done(self, update_available, latest):
         self.btn_check.setEnabled(True)  # opcional: ocultar botones
         self.btn_update.setEnabled(True)
-        
-        if sys.platform.startswith("win"):
-            self.update_ms_store_button()
         
         if update_available or not self.game_installed():
             self.set_status(f"Nueva versión disponible: {latest}. Actualizando automáticamente...")

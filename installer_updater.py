@@ -45,6 +45,7 @@ class UpdaterWindow(QtWidgets.QWidget):
         self.setWindowTitle("Launcher Updater")
         self.setMinimumSize(500, 125)
         self.setMaximumSize(500, 125)
+        self.setWindowFlag(QtCore.Qt.WindowMaximizeButtonHint, False)
 
         self.setup_ui()
         self.start_check()

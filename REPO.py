@@ -30,6 +30,7 @@ class LauncherWin(QWidget):
         self.setWindowTitle("Instalador Global del Launcher")
         self.setWindowIcon(QIcon(os.path.join(basedir, "download-icon.png")))
         self.setFixedSize(300, 100)
+        self.setWindowFlag(Qt.WindowMaximizeButtonHint, False)
         
         # Configuración de la interfaz
         layout = QVBoxLayout()
