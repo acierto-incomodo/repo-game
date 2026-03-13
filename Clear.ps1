@@ -12,10 +12,11 @@ $folders = @(
 $files = @(
   "main.spec",
   "theshooterlauncher_deb.deb",
-  "launcher_win.py",
   "launcher_win.spec",
   "installer_updater.spec",
-  "version_win_launcher.txt"
+  "version_win_launcher.txt",
+  "Launcher_Portable.py",
+  "Launcher_Portable.spec"
 )
 
 foreach ($folder in $folders) {

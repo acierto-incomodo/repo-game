@@ -1,7 +1,7 @@
 [Setup]
-AppName=R.E.P.O. Launcher by StormGamesStudios
-AppVersion=1.0.6
-DefaultDirName={userappdata}\StormGamesStudios\NewGameDir\repo-game
+AppName=R.E.P.O. by StormGamesStudios
+AppVersion=1.0.5
+DefaultDirName={userappdata}\StormGamesStudios\NewGameDir\REPO
 DefaultGroupName=StormGamesStudios
 OutputDir=C:\Users\melio\Documents\GitHub\repo-game\output
 OutputBaseFilename=REPO_Launcher_Installer
@@ -11,7 +11,7 @@ AppCopyright=Copyright © 2025 StormGamesStudios. All rights reserved.
 VersionInfoCompany=StormGamesStudios
 AppPublisher=StormGamesStudios
 SetupIconFile=repo.ico
-VersionInfoVersion=1.0.6.0
+VersionInfoVersion=1.0.5.0
 DisableProgramGroupPage=yes
 ; Habilitar selección de carpeta
 DisableDirPage=yes
@@ -20,24 +20,19 @@ DisableDirPage=yes
 Source: "C:\Users\melio\Documents\GitHub\repo-game\dist\installer_updater.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\melio\Documents\GitHub\repo-game\repo.ico"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\melio\Documents\GitHub\repo-game\repo.png"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\melio\Documents\GitHub\repo-game\dist\uninstaller-old.exe"; DestDir: "{tmp}"; Flags: dontcopy
 
 [Icons]
-Name: "{commonprograms}\StormGamesStudios\R.E.P.O. Launcher"; Filename: "{app}\installer_updater.exe"; IconFilename: "{app}\repo.ico"; Comment: "Lanzador de R.E.P.O. Launcher"; WorkingDir: "{app}"
-Name: "{commonprograms}\StormGamesStudios\Desinstalar R.E.P.O. Launcher"; Filename: "{uninstallexe}"; IconFilename: "{app}\repo.ico"; Comment: "Desinstalar R.E.P.O. Launcher"
-
-; Acceso directo en el menú de inicio dentro de la carpeta StormLauncher_HMCL-Edition
-Name: "{commonprograms}\StormGamesStudios\R.E.P.O. Launcher"; Filename: "{app}\installer_updater.exe"; IconFilename: "{app}\repo.ico"
-Name: "{commonprograms}\StormGamesStudios\Desinstalar R.E.P.O. Launcher"; Filename: "{uninstallexe}"; IconFilename: "{app}\repo.ico"
+Name: "{commonprograms}\StormGamesStudios\REPO"; Filename: "{app}\installer_updater.exe"; IconFilename: "{app}\repo.ico"; Comment: "Lanzador de R.E.P.O."; WorkingDir: "{app}"
+Name: "{commonprograms}\StormGamesStudios\Desinstalar REPO"; Filename: "{uninstallexe}"; IconFilename: "{app}\repo.ico"; Comment: "Desinstalar R.E.P.O."
 
 [Registry]
-Root: HKCU; Subkey: "Software\R.E.P.O. Launcher"; ValueType: string; ValueName: "Install_Dir"; ValueData: "{app}"
+Root: HKCU; Subkey: "Software\REPO"; ValueType: string; ValueName: "Install_Dir"; ValueData: "{app}"
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}"
 
 [Run]
-Filename: "{app}\installer_updater.exe"; Description: "Ejecutar R.E.P.O. Launcher"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\installer_updater.exe"; Description: "Ejecutar REPO"; Flags: nowait postinstall skipifsilent
 
 [Code]
 function IsDirectoryEmpty(DirPath: String): Boolean;
@@ -101,6 +96,15 @@ begin
   end;
 end;
 
+procedure UninstallOldVersion();
+begin
+  // 1. Revisar la ruta de la versión anterior específica
+  RunUninstaller(ExpandConstant('{userappdata}\StormGamesStudios\NewGameDir\REPO_Launcher'));
+  
+  // 2. Revisar la ruta donde se va a instalar actualmente (por si es una reinstalación/actualización)
+  RunUninstaller(ExpandConstant('{app}'));
+end;
+
 procedure CloseApp();
 var
   ResultCode: Integer;
@@ -108,23 +112,17 @@ begin
   // Cierra el actualizador y el launcher si están abiertos
   Exec('taskkill', '/F /IM installer_updater.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
   Exec('taskkill', '/F /IM win_launcher.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
-  Exec('taskkill', '/F /IM "R.E.P.O. Launcher.exe"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
-  Exec('taskkill', '/F /IM "Launcher_Portable.exe"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
   Exec('taskkill', '/F /IM "REPO.exe"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  Exec('taskkill', '/F /IM "R.E.P.O. Launcher.exe"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
 end;
 
 procedure CurStepChanged(CurStep: TSetupStep);
-var
-  ResultCode: Integer;
 begin
   // Durante la instalación, cierra cualquier instancia abierta
   if CurStep = ssInstall then
   begin
     CloseApp();
-
-    // Extraer y ejecutar el uninstaller-old.exe temporalmente
-    ExtractTemporaryFile('uninstaller-old.exe');
-    Exec(ExpandConstant('{tmp}\uninstaller-old.exe'), '', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+    UninstallOldVersion();
   end;
 end;
 
