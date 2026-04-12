@@ -12,15 +12,16 @@ from PySide6 import QtCore, QtWidgets, QtGui
 
 # ---------------- CONFIG ------------------
 
-LAUNCHER_VERSION = "1.0.0"
+LAUNCHER_VERSION = "1.0.1"
 
-BUILD_URL_WIN = "https://github.com/acierto-incomodo/repo-game/releases/latest/download/Build.zip"
-BUILD_URL_LINUX = "https://github.com/acierto-incomodo/repo-game/releases/latest/download/BuildLinux.zip"
-VERSION_URL = "https://github.com/acierto-incomodo/repo-game/releases/latest/download/Version.txt"
+BASE_URL_WIN = "https://github.com/acierto-incomodo/repo-game/releases/latest/download/Build.zip"
+BUILD_URL_LINUX = "https://github.com/acierto-incomodo/repo-game/releases/latest/download/Build.zip"
+VERSION_URL = "https://github.com/acierto-incomodo/repo-game/releases/latest/download/version.txt"
 RELEASE_NOTES_URL = "https://github.com/acierto-incomodo/repo-game/releases/latest/download/ReleaseNotes.txt"
+URL_7ZR = "https://github.com/acierto-incomodo/repo-game/releases/latest/download/7zr.exe"
 
 EXE_NAME_WIN   = "Build/REPO.exe"
-EXE_NAME_LINUX = "REPO Linux.x86_64"
+EXE_NAME_LINUX = "Build/REPO.exe"
 
 DOWNLOAD_DIR = Path.cwd() / "downloads"
 GAME_DIR     = Path.cwd() / "game"
@@ -52,8 +53,8 @@ def download_file(url: str, dest: Path, progress_callback=None, chunk_size=8192)
     return dest
 
 
-def extract_zip(zip_path: Path, to_dir: Path):
-    if to_dir.exists():
+def extract_zip(zip_path: Path, to_dir: Path, clear: bool = True):
+    if clear and to_dir.exists():
         shutil.rmtree(to_dir)
     to_dir.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(zip_path, "r") as z:
@@ -83,11 +84,10 @@ class LauncherWindow(QtWidgets.QWidget):
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("R.E.P.O. Launcher")
+        self.setWindowTitle("R.E.P.O. - Launcher")
         self.setMinimumSize(520, 420)
         self.setMaximumSize(520, 420)
         self.setWindowIcon(QtGui.QIcon.fromTheme("applications-games"))
-        self.setWindowFlags(QtCore.Qt.Window | QtCore.Qt.WindowMinimizeButtonHint | QtCore.Qt.WindowCloseButtonHint)
 
         self.setup_ui()
         self.refresh_version_display()
@@ -124,11 +124,9 @@ class LauncherWindow(QtWidgets.QWidget):
 
         self.btn_open_folder = QtWidgets.QPushButton("Abrir ubicación")
         self.btn_delete_data = QtWidgets.QPushButton("Eliminar datos")
-        self.btn_ms_store = QtWidgets.QPushButton()
 
         tools_layout.addWidget(self.btn_open_folder)
         tools_layout.addWidget(self.btn_delete_data)
-        tools_layout.addWidget(self.btn_ms_store)
 
         layout.addLayout(tools_layout)
         # ------------------------------------------
@@ -179,8 +177,6 @@ class LauncherWindow(QtWidgets.QWidget):
         # nuevas señales
         self.btn_open_folder.clicked.connect(self.open_location)
         self.btn_delete_data.clicked.connect(self.delete_data)
-
-        self.btn_ms_store.setVisible(False)
 
         self.btn_update.setEnabled(False)
 
@@ -283,15 +279,6 @@ class LauncherWindow(QtWidgets.QWidget):
 
     def _update_thread(self):
         try:
-            if sys.platform.startswith("win"):
-                build_url = BUILD_URL_WIN
-                zip_name = "Build.zip"
-            else:
-                build_url = BUILD_URL_LINUX
-                zip_name = "BuildLinux.zip"
-
-            zip_path = DOWNLOAD_DIR / zip_name
-
             def progress_cb(downloaded, total):
                 percent = int(downloaded * 100 / total) if total else 0
                 QtCore.QMetaObject.invokeMethod(
@@ -300,14 +287,71 @@ class LauncherWindow(QtWidgets.QWidget):
                     QtCore.Q_ARG(int, percent)
                 )
 
-            download_file(build_url, zip_path, progress_cb)
+            if sys.platform.startswith("win"):
+                # --- WINDOWS: 7zip Split ---
+                
+                # 1. Descargar 7zr.exe
+                self.set_status("Descargando herramienta 7zr...")
+                p_7zr = DOWNLOAD_DIR / "7zr.exe"
+                download_file(URL_7ZR, p_7zr, progress_cb)
 
-            self.set_status("Extrayendo archivos...")
-            extract_zip(zip_path, BUILD_DIR)
+                # 2. Descargar partes .001 a .012
+                total_parts = 2
+                for i in range(1, total_parts + 1):
+                    ext = f".{i:03d}"
+                    url = f"{BASE_URL_WIN}{ext}"
+                    fname = f"Build.zip{ext}"
+                    self.set_status(f"Descargando parte {i}/{total_parts}...")
+                    download_file(url, DOWNLOAD_DIR / fname, progress_cb)
 
-            self.set_status("Descargando Version.txt...")
+                # 3. Unir partes para obtener Build.zip en descargas
+                self.set_status("Reconstruyendo Build.zip...")
+                
+                # Configurar para que no salga ventana de consola
+                startupinfo = subprocess.STARTUPINFO()
+                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+
+                cmd = [
+                    str(p_7zr), "x", "-y",
+                    f"-o{DOWNLOAD_DIR}",
+                    str(DOWNLOAD_DIR / "Build.zip.001")
+                ]
+                subprocess.run(cmd, check=True, startupinfo=startupinfo)
+
+                # 4. Descomprimir Build.zip en la carpeta del juego
+                self.set_status("Instalando archivos del juego...")
+                extract_zip(DOWNLOAD_DIR / "Build.zip", BUILD_DIR, clear=True)
+
+            else:
+                # --- LINUX / MAC ---
+                downloads = [
+                    (BUILD_URL_LINUX, "BuildLinux.zip"),
+                ]
+                for idx, (url, zip_name) in enumerate(downloads):
+                    zip_path = DOWNLOAD_DIR / zip_name
+                    self.set_status(f"Descargando {zip_name}...")
+                    download_file(url, zip_path, progress_cb)
+
+                    self.set_status(f"Extrayendo {zip_name}...")
+                    extract_zip(zip_path, BUILD_DIR, clear=(idx == 0))
+                    try:
+                        zip_path.unlink()
+                    except Exception:
+                        pass
+
+            self.set_status("Descargando version.txt...")
             version = requests.get(VERSION_URL, timeout=30).text.strip()
             VERSION_FILE.write_text(version, encoding="utf-8")
+
+            # Eliminar archivos descargados en DOWNLOAD_DIR al terminar la actualización
+            try:
+                for p in DOWNLOAD_DIR.iterdir():
+                    if p.is_dir():
+                        shutil.rmtree(p)
+                    else:
+                        p.unlink()
+            except Exception:
+                pass
 
             QtCore.QMetaObject.invokeMethod(
                 self, "on_update_done",
@@ -326,15 +370,6 @@ class LauncherWindow(QtWidgets.QWidget):
     def on_update_done(self, version):
         self.progress.setVisible(False)
         self.set_status("Instalación completada." if not self.game_installed() else "Actualización completada.")
-        
-        # Limpiar carpeta de descargas tras instalación/actualización exitosa
-        try:
-            if DOWNLOAD_DIR.exists():
-                shutil.rmtree(DOWNLOAD_DIR)
-            DOWNLOAD_DIR.mkdir(exist_ok=True)
-        except Exception as e:
-            # No bloqueamos la UI si falla la limpieza; mostramos advertencia
-            self.set_status(self.status.text() + f" (No se pudo limpiar downloads: {e})")
         
         # Habilitar botones nuevamente
         self.btn_check.setEnabled(True)
