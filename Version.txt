@@ -1,1 +1,1 @@
-v0.3.2 ModsBuild v1
+v1.0.3
