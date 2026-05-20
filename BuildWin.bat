@@ -7,3 +7,4 @@ python -m PyInstaller --onefile --windowed --noconsole --icon=repo.ico launcher_
 python -m PyInstaller --onefile --windowed --noconsole --icon=repo.ico installer_updater.py
 python -m PyInstaller --onefile --windowed --noconsole --icon=repo.ico uninstaller-old.py
 echo 1.0.2 > version_win_launcher.txt
+echo "v0.4.1 ModsBuild v1" > Version.txt

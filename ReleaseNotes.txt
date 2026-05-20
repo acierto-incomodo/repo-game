@@ -3,5 +3,5 @@ Cambios
 Launcher (v1.0.1):
 - NaN
 
-Juego (v0.4.1 ModBuild v1):
+Juego (v0.4.1 ModsBuild v1):
 - NaN
